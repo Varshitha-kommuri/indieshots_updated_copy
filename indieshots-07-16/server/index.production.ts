@@ -60,10 +60,20 @@ app.use((req, res, next) => {
 (async () => {
   const server = await registerRoutes(app);
   
+  // Add health check endpoint for deployment
+  app.get('/health', (_req, res) => {
+    res.status(200).json({ status: 'healthy', timestamp: new Date().toISOString() });
+  });
+  
+  // Add API health check
+  app.get('/api/health', (_req, res) => {
+    res.status(200).json({ status: 'healthy', timestamp: new Date().toISOString() });
+  });
+  
   // Setup static file serving for production
   serveStatic(app);
   
-  const port = parseInt(process.env.PORT ?? "8080", 10);
+  const port = parseInt(process.env.PORT || "8080", 10);
   
   server.listen(port, "0.0.0.0", () => {
     log(`serving on port ${port}`);
@@ -76,8 +86,8 @@ app.use((req, res, next) => {
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
-
+    
+    log(`Error ${status}: ${message}`);
     res.status(status).json({ message });
-    throw err;
   });
 })();
