@@ -1,4 +1,5 @@
-# Final production Dockerfile - no Vite dependencies
+
+# Optimized production Dockerfile
 FROM node:20-alpine AS builder
 
 WORKDIR /app
@@ -18,13 +19,13 @@ COPY . .
 # Build frontend
 RUN npm run build
 
-# Build backend with explicit exclusions
-RUN npx esbuild server/index.ts \
+# Build backend for production
+RUN npx esbuild server/index.production.ts \
     --platform=node \
     --packages=external \
     --bundle \
     --format=esm \
-    --outdir=dist \
+    --outfile=dist/server.js \
     --external:vite \
     --external:@vitejs/plugin-react \
     --external:@replit/vite-plugin-cartographer \
@@ -45,20 +46,9 @@ COPY package*.json ./
 RUN npm ci --only=production --legacy-peer-deps && \
     npm cache clean --force
 
-# Copy built application and static files
+# Copy built application
 COPY --from=builder /app/dist ./dist
-
-# Copy production server
-COPY --from=builder /app/server/index.production.ts ./server/
-COPY shared ./shared
-
-# Build production server without Vite dependencies
-RUN npx esbuild server/index.production.ts \
-    --platform=node \
-    --packages=external \
-    --bundle \
-    --format=esm \
-    --outfile=dist/server.js
+COPY --from=builder /app/shared ./shared
 
 # Create non-root user
 RUN addgroup -g 1001 -S nodejs && \
@@ -76,7 +66,7 @@ EXPOSE 8080
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD node -e "http.get('http://localhost:8080/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })" || exit 1
+    CMD node -e "http.get('http://localhost:8080/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) }).on('error', () => process.exit(1))"
 
 # Start application
 ENTRYPOINT ["dumb-init", "--"]
