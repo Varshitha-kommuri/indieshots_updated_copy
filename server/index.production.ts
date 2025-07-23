@@ -10,7 +10,7 @@ function log(message: string, source = "express") {
 
 // Production static file serving
 function serveStatic(app: express.Express) {
-  const publicPath = path.resolve("dist/public");
+  const publicPath = path.resolve(process.cwd(), "dist/public");
   app.use(express.static(publicPath));
   
   // Fallback for SPA routing
