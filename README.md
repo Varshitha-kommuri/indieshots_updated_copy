@@ -15,7 +15,7 @@ A sophisticated full-stack application that converts screenplay scripts into str
 - **📊 Customizable Export**: Select specific data fields and export as XLSX or CSV
 - **👥 User Management**: Tier-based subscription system (Free/Pro)
 - **⚡ Real-time Processing**: Background job processing with live status updates
-- **🔐 Multiple Authentication**: Firebase Auth with Google OAuth and email/password
+- **🔐 Multiple Authentication**: Firebase Authentication  with Google OAuth and email/password
 
 ## 🚀 Live Demo
 
