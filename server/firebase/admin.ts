@@ -11,7 +11,7 @@ try {
     
     if (serviceAccountKey) {
       // Production: Use service account credentials
-      const serviceAccount = JSON.parse(serviceAccountKey);
+     const serviceAccount = JSON.parse(Buffer.from(serviceAccountKey, 'base64').toString('utf-8');
       admin.initializeApp({
         credential: admin.credential.cert(serviceAccount),
         projectId: serviceAccount.project_id || projectId,
