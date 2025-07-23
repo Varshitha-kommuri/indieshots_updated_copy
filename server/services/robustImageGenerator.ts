@@ -342,11 +342,11 @@ async function generateImageWithRetry(prompt: string, attempt: number): Promise<
     
     let response;
     try {
-      console.log(`📡 Calling OpenAI DALL-E 3 API with 30-second timeout...`);
+      console.log(`📡 Calling OpenAI DALL-E 3 API with 120-second timeout...`);
       
       // Create a timeout promise that rejects after 30 seconds
       const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('OpenAI API timeout after 30 seconds')), 30000);
+        setTimeout(() => reject(new Error('OpenAI API timeout after 120 seconds')), 120000);
       });
       
       // Race the API call against the timeout
