@@ -58,9 +58,7 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  const server = await registerRoutes(app);
-  
-  // Add health check endpoint for deployment
+  // Add health check endpoint FIRST - before any other routes
   app.get('/health', (_req, res) => {
     res.status(200).json({ status: 'healthy', timestamp: new Date().toISOString() });
   });
@@ -69,8 +67,14 @@ app.use((req, res, next) => {
   app.get('/api/health', (_req, res) => {
     res.status(200).json({ status: 'healthy', timestamp: new Date().toISOString() });
   });
+
+  const server = await registerRoutes(app);
   
-  // Setup static file serving for production
+  // Start background cleanup job for scheduled account deletions
+  const { startCleanupJob } = await import('./jobs/cleanup-scheduled-deletions');
+  startCleanupJob();
+  
+  // Setup static file serving for production (AFTER health checks)
   serveStatic(app);
   
   const port = parseInt(process.env.PORT || "8080", 10);
