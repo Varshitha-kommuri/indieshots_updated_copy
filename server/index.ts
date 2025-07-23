@@ -37,7 +37,12 @@ app.use((req, res, next) => {
   next();
 });
 
+
 (async () => {
+  // Add health check endpoint FIRST for Cloud Run
+  app.get('/health', (_req, res) => {
+    res.status(200).json({ status: 'healthy', timestamp: new Date().toISOString() });
+  });
   const server = await registerRoutes(app);
   
   // Start background cleanup job for scheduled account deletions
@@ -61,13 +66,9 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  // Add health check endpoint for Cloud Run
-  app.get('/health', (_req, res) => {
-    res.status(200).json({ status: 'healthy', timestamp: new Date().toISOString() });
-  });
-
+ 
   // Port configuration for both Replit and Cloud Run
-  const port = parseInt(process.env.PORT || '5000', 10);
+  const port = parseInt(process.env.PORT || '8080', 10);
   
   server.listen(port, "0.0.0.0", () => {
     log(`serving on port ${port}`);
