@@ -18,17 +18,13 @@ COPY . .
 # Build frontend
 RUN npm run build
 
-# Build backend using the corrected index.ts (not index.production.ts)
-RUN npx esbuild server/index.ts \
+# Build backend using index.production.ts (fixed version)
+RUN npx esbuild server/index.production.ts \
     --platform=node \
     --packages=external \
     --bundle \
     --format=esm \
-    --outfile=dist/server.js \
-    --external:vite \
-    --external:@vitejs/plugin-react \
-    --external:@replit/vite-plugin-cartographer \
-    --external:@replit/vite-plugin-runtime-error-modal
+    --outfile=dist/server.js
 
 # Production stage
 FROM node:20-alpine AS production
