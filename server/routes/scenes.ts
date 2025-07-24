@@ -8,16 +8,7 @@ import { generateShotsFromScene } from '../services/shotGenerator';
 import { generateStoryboards } from '../services/imageGenerator';
 import { generateStoryboardBatch } from '../services/robustImageGenerator';
 // Import character memory service with fallback
-let characterMemoryService: any;
-try {
-  characterMemoryService = require('../services/characterMemoryService').characterMemoryService;
-} catch (importError) {
-  console.error('Character memory service unavailable:', importError);
-  // Create fallback service
-  characterMemoryService = {
-    getMemoryStats: () => ({ characterCount: 0, characters: [] })
-  };
-}
+import { characterMemoryService } from '../services/characterMemoryService';
 import { productionQuotaManager } from '../lib/productionQuotaManager';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -66,6 +57,46 @@ router.get('/debug/auth-test', async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Auth debug error:', error);
     res.status(500).json({ error: 'Auth debug failed' });
+  }
+});
+
+// Character memory debug endpoint - similar to Python version
+router.get('/debug/character-memory', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const { characterAgent } = await import('../services/characterAgent');
+    
+    const characterMemory = characterAgent.getCharacterMemory();
+    const characterCount = Object.keys(characterMemory).length;
+    const characters = Object.keys(characterMemory);
+    
+    console.log(`[🧠] CHARACTER MEMORY DEBUG: ${characterCount} characters stored`);
+    console.log(`[🧠] Characters: [${characters.join(', ')}]`);
+    
+    const detailedMemory: { [key: string]: { description: string, descriptionLength: number } } = {};
+    for (const [character, description] of Object.entries(characterMemory)) {
+      detailedMemory[character] = {
+        description: description,
+        descriptionLength: description.length
+      };
+    }
+    
+    res.json({
+      success: true,
+      timestamp: new Date().toISOString(),
+      statistics: {
+        characterCount,
+        characters,
+        totalMemorySize: JSON.stringify(characterMemory).length
+      },
+      detailedMemory,
+      message: `Character memory contains ${characterCount} characters with consistent visual descriptions`
+    });
+  } catch (error) {
+    console.error('Character memory debug error:', error);
+    res.status(500).json({ 
+      error: 'Character memory debug failed',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
   }
 });
 
@@ -890,11 +921,11 @@ router.post('/storyboards/recover/:jobId/:sceneIndex', authMiddleware, async (re
       sceneIndex: parseInt(sceneIndex)
     });
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Shot recovery failed:', error);
     res.status(500).json({ 
       error: 'Failed to recover shots',
-      details: error.message
+      details: error?.message || 'Unknown error'
     });
   }
 });
